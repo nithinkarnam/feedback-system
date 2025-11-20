@@ -36,4 +36,28 @@ public class SentimentAnalyzerTest {
         assertTrue(score >= -0.3 && score <= 0.3);
         assertEquals("Neutral", analyzer.label(score));
     }
+
+    @Test
+    void testNegationPhrase() {
+        // Neutralize MCQ inputs so we test text-only effect: negation should push text
+        // score negative
+        double score = analyzer.computeScore(null, null, "Average", "I don't feel this is good");
+        assertTrue(score < 0.0, "Expected negative overall score due to negation in text");
+    }
+
+    @Test
+    void testIntensifierAndDampener() {
+        // Neutral MCQ so only text contributes — intensifier should increase text score
+        // vs dampener
+        double scoreVery = analyzer.computeScore(null, null, "Average", "This is very good and excellent");
+        double scoreSlight = analyzer.computeScore(null, null, "Average", "This is slightly good");
+        assertTrue(scoreVery >= scoreSlight, "Intensifier should not be less than dampened version");
+    }
+
+    @Test
+    void testMixedOpinion() {
+        double score = analyzer.computeScore("Yes", "No", "Average", "Good but slow and confusing");
+        // Mixed should be near neutral but not extreme
+        assertTrue(score > -0.6 && score < 0.6);
+    }
 }
